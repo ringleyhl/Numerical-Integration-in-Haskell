@@ -26,7 +26,6 @@ data Token = BinOp BinOps | UOp UOps | CSym Double | VSym String | LPar | RPar |
 tolerance = 1e-15
 maxDepth = 13
 
-
 parseExpr :: [Token] -> AExpr
 parseExpr = sr []
 
@@ -65,9 +64,6 @@ lexer ('x':s)         = VSym "x"     : lexer s
 lexer (c:s) | isDigit c =
   let (num,rst) = span (\x -> isDigit x || x == '.') s
    in CSym (read (c:num)) : lexer rst
--- lexer (c:s) | isAlpha c =
---   let (num,rst) = span (\x -> isAlphaNum x || x == '_') s
---    in VSym (c:num) : lexer rst
 lexer (c:s) | isSpace c = lexer s
 lexer s = [Err (show s)]
 
@@ -87,20 +83,14 @@ eval env   (Cos e)     = cos (eval env e)
 eval env   (Tan e)     = tan (eval env e)
 eval env   (Ln e)      = log (eval env e)
 
-
--- twoPoint :: Double -> Double -> AExpr -> Double
--- twoPoint a b expr = n * (eval [("x", (n * (-1.0 / sqrt 3.0) + m))] expr) + n * (eval [("x", (n * (1.0 / sqrt 3.0) + m))] expr)
---             where
---                 m = (a + b) / 2.0
---                 n = (b - a) / 2.0
-
-
+-- computes integral estimate for given interval using three-point Gaussian quadrature
 threePoint :: Double -> Double -> AExpr -> Double
 threePoint a b expr = n * ((5.0 / 9.0) * (eval ("x", (n * (- sqrt(3.0 / 5.0)) + m)) expr) + (8.0 / 9.0) * (eval ("x", m) expr) + (5.0 / 9.0) * (eval ("x", (n * (sqrt(3.0 / 5.0)) + m)) expr))
             where
                 m = (a + b) / 2.0
                 n = (b - a) / 2.0
 
+-- recursively subdivides interval until tolerance or max depth is reached, effectively adding all leaves in the interval tree
 adaptiveThree :: Double -> Double -> Integer -> Integer -> Double -> AExpr -> Double
 adaptiveThree a b depth maxDepth tol expr | depth >= maxDepth = threePoint a b expr
 adaptiveThree a b depth maxDepth tol expr | abs (whole - left + right) > tol = 
@@ -112,14 +102,14 @@ adaptiveThree a b depth maxDepth tol expr | abs (whole - left + right) > tol =
                 right = threePoint midpoint b expr
 adaptiveThree a b depth maxDepth tol expr = threePoint a b expr
 
-
+-- main method that loops to get user input and provide evaluations
 main :: IO ()
 main = putStrLn "Enter a choice of eval, int, or quit." >>
   getLine >>= (\s -> case s of
   "eval" -> do
     putStrLn "Enter a string:"
     s <- getLine
-    let ps = parseExpr $ lexer s
+    let ps = parser s
     putStrLn "The result of parser is:"
     putStrLn (show (ps))
     putStrLn "The result of evaluation is:"
@@ -135,11 +125,11 @@ main = putStrLn "Enter a choice of eval, int, or quit." >>
     upper <- getLine
     let a = read lower :: Double
     let b = read upper :: Double
-    let ls = lexer s
+    let ls = parser s
     putStrLn "The result of parser is:"
-    putStrLn (show (parseExpr ls))
+    putStrLn (show ls)
     putStrLn "The result of integration is:"
-    putStrLn (show (adaptiveThree a b 0 maxDepth tolerance (parseExpr ls)))
+    putStrLn (show (adaptiveThree a b 0 maxDepth tolerance ls))
     main
   "quit" -> return ()
   _ -> do
