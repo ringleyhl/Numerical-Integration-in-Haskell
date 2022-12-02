@@ -23,8 +23,8 @@ data Token = BinOp BinOps | UOp UOps | CSym Double | VSym String | LPar | RPar |
     deriving (Show,Eq)
 
 -- constants for recursive constraints
-tolerance = 1e-15
-maxDepth = 13
+tolerance = 1e-12
+maxDepth = 12
 
 parseExpr :: [Token] -> AExpr
 parseExpr = sr []
@@ -81,16 +81,19 @@ eval env   (Exp e1 e2) = eval env e1 ** eval env e2
 eval env   (Sin e)     = sin (eval env e)
 eval env   (Cos e)     = cos (eval env e)
 eval env   (Tan e)     = tan (eval env e)
-eval env   (Ln e)      = log (eval env e)
+eval env   (Ln  e)     = log (eval env e)
 
--- computes integral estimate for given interval using three-point Gaussian quadrature
+-- Computes integral estimate for given interval using three-point Gaussian quadrature.
+-- Takes lower and upper integration bounds and funtion as input.
 threePoint :: Double -> Double -> AExpr -> Double
 threePoint a b expr = n * ((5.0 / 9.0) * (eval ("x", (n * (- sqrt(3.0 / 5.0)) + m)) expr) + (8.0 / 9.0) * (eval ("x", m) expr) + (5.0 / 9.0) * (eval ("x", (n * (sqrt(3.0 / 5.0)) + m)) expr))
             where
                 m = (a + b) / 2.0
                 n = (b - a) / 2.0
 
--- recursively subdivides interval until tolerance or max depth is reached, effectively adding all leaves in the interval tree
+-- Recursively subdivides interval until tolerance or max depth is reached, effectively adding all leaves in the interval tree.
+-- Takes as input lower integration bound, upper bound, current recursion depth, max recursion depth, tolerance, and the function.
+-- Returns the estimated integral.
 adaptiveThree :: Double -> Double -> Integer -> Integer -> Double -> AExpr -> Double
 adaptiveThree a b depth maxDepth tol expr | depth >= maxDepth = threePoint a b expr
 adaptiveThree a b depth maxDepth tol expr | abs (whole - left + right) > tol = 
@@ -98,7 +101,7 @@ adaptiveThree a b depth maxDepth tol expr | abs (whole - left + right) > tol =
             where
                 midpoint = (a + b) / 2
                 whole = threePoint a b expr
-                left = threePoint a midpoint expr
+                left  = threePoint a midpoint expr
                 right = threePoint midpoint b expr
 adaptiveThree a b depth maxDepth tol expr = threePoint a b expr
 
