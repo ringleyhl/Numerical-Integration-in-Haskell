@@ -47,6 +47,10 @@ sr (RPar   : PE e         :  LPar : s) q = sr (PE e                 : s) q
 sr s (x:xs) = sr (x:s) xs
 sr s [] = error ("Parse error: " ++ show s)
 
+check :: [Token] -> Bool
+check [Err e] = True
+check e = False
+
 lexer :: String -> [Token]
 lexer "" = []
 lexer ('(':s)         = LPar         : lexer s
@@ -86,8 +90,8 @@ eval env   (Ln  e)     = log (eval env e)
 -- Computes integral estimate for given interval using three-point Gaussian quadrature.
 -- Takes lower and upper integration bounds and funtion as input.
 threePoint :: Double -> Double -> AExpr -> Double
-threePoint a b expr = n * ((5.0 / 9.0) * (eval ("x", (n * (- sqrt(3.0 / 5.0)) + m)) expr) 
-                         + (8.0 / 9.0) * (eval ("x", m) expr) 
+threePoint a b expr = n * ((5.0 / 9.0) * (eval ("x", (n * (- sqrt(3.0 / 5.0)) + m)) expr)
+                         + (8.0 / 9.0) * (eval ("x", m) expr)
                          + (5.0 / 9.0) * (eval ("x", (n * (sqrt(3.0 / 5.0)) + m)) expr))
                           where
                               m = (a + b) / 2.0
@@ -98,7 +102,7 @@ threePoint a b expr = n * ((5.0 / 9.0) * (eval ("x", (n * (- sqrt(3.0 / 5.0)) + 
 -- Returns the estimated integral.
 adaptiveThree :: Double -> Double -> Integer -> Integer -> Double -> AExpr -> Double
 adaptiveThree a b depth maxDepth tol expr | depth >= maxDepth = threePoint a b expr
-adaptiveThree a b depth maxDepth tol expr | abs (whole - left + right) > tol = 
+adaptiveThree a b depth maxDepth tol expr | abs (whole - left + right) > tol =
         (adaptiveThree a midpoint (depth + 1) maxDepth (tol / 2) expr) + (adaptiveThree midpoint b (depth + 1) maxDepth (tol / 2) expr)
             where
                 midpoint = (a + b) / 2
@@ -111,19 +115,40 @@ adaptiveThree a b depth maxDepth tol expr = threePoint a b expr
 main :: IO ()
 main = putStrLn "Enter a choice of eval, int, or quit." >>
   getLine >>= (\s -> case s of
-  "eval" -> do
+  "eval" -> evaluate
+  "int" -> integrate
+  "quit" -> return ()
+  _ -> do
+    putStrLn $ "Invalid input: " ++ s
+    main
+  )
+
+evaluate :: IO ()
+evaluate = do
     putStrLn "Enter a string:"
     s <- getLine
+    if check $ lexer s
+      then do
+        putStrLn $ "Invalid input: " ++ s
+        evaluate
+      else pure ()
     let ps = parser s
     putStrLn "The result of parser is:"
     putStrLn (show (ps))
     putStrLn "The result of evaluation is:"
     putStrLn (show (eval ("x",0) ps))
     main
-  "int" -> do
+
+integrate :: IO ()
+integrate = do
     putStrLn "Enter a function:"
     putStr "f(x) = "
     s <- getLine
+    if check $ lexer s
+      then do
+        putStrLn $ "Invalid input: " ++ s
+        integrate 
+      else pure ()
     putStrLn "Enter lower bound:"
     lower <- getLine
     putStrLn "Enter upper bound:"
@@ -136,8 +161,3 @@ main = putStrLn "Enter a choice of eval, int, or quit." >>
     putStrLn "The result of integration is:"
     putStrLn (show (adaptiveThree a b 0 maxDepth tolerance ls))
     main
-  "quit" -> return ()
-  _ -> do
-    putStrLn $ "Invalid input: " ++ s
-    main 
-  )
