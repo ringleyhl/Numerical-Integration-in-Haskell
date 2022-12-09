@@ -125,7 +125,7 @@ main = putStrLn "Enter a choice of eval, int, or quit." >>
 
 evaluate :: IO ()
 evaluate = do
-    putStrLn "Enter a string:"
+    putStrLn "Enter a string to evaluate:"
     s <- getLine
     if check $ lexer s
       then do
@@ -141,7 +141,7 @@ evaluate = do
 
 integrate :: IO ()
 integrate = do
-    putStrLn "Enter a function:"
+    putStrLn "Enter a function as a string to integrate:"
     putStr "f(x) = "
     s <- getLine
     if check $ lexer s
@@ -161,4 +161,3 @@ integrate = do
     putStrLn "The result of integration is:"
     putStrLn (show (adaptiveThree a b 0 maxDepth tolerance ls))
     main
-    

@@ -1,0 +1,15 @@
+Testing eval option from main method to make sure evaluations are accurate:
+sin(0) -> 0.0
+sin(3.1415927) -> -4.641020666628482e-8
+cos(0) -> 1.0
+tan(0) -> 0.0
+ln(2.72) -> 1.000631880307906
+25^(1/2) -> 5.0
+
+Testing int option from main:
+f(x) = x, 0, 1 -> 0.5
+f(x) = x, -1, 1 -> 0.0
+f(x) = sin(x), 0, 3.14 -> 1.9999987317275396
+f(x) = cos(x), 0, 1 -> 0.8414709848078965
+f(x) = (12*(x^5)) + (4*(x^4)) + (7.2*(x^3)) + (1.5*(x^2)) + (x), 0, 5 -> 34950
+f(x) = ln(x), 0, 10 -> 13.025978698440529
