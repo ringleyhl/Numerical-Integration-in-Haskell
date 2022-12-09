@@ -161,3 +161,4 @@ integrate = do
     putStrLn "The result of integration is:"
     putStrLn (show (adaptiveThree a b 0 maxDepth tolerance ls))
     main
+    
