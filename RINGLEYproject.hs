@@ -22,7 +22,7 @@ data UOps = SinOp | CosOp | TanOp | LnOp
 data Token = BinOp BinOps | UOp UOps | CSym Double | VSym String | LPar | RPar | PE AExpr | Err String
     deriving (Show,Eq)
 
--- constants for recursive constraints
+-- Constants for recursive constraints
 tolerance = 1e-12
 maxDepth = 12
 
@@ -86,10 +86,12 @@ eval env   (Ln  e)     = log (eval env e)
 -- Computes integral estimate for given interval using three-point Gaussian quadrature.
 -- Takes lower and upper integration bounds and funtion as input.
 threePoint :: Double -> Double -> AExpr -> Double
-threePoint a b expr = n * ((5.0 / 9.0) * (eval ("x", (n * (- sqrt(3.0 / 5.0)) + m)) expr) + (8.0 / 9.0) * (eval ("x", m) expr) + (5.0 / 9.0) * (eval ("x", (n * (sqrt(3.0 / 5.0)) + m)) expr))
-            where
-                m = (a + b) / 2.0
-                n = (b - a) / 2.0
+threePoint a b expr = n * ((5.0 / 9.0) * (eval ("x", (n * (- sqrt(3.0 / 5.0)) + m)) expr) 
+                         + (8.0 / 9.0) * (eval ("x", m) expr) 
+                         + (5.0 / 9.0) * (eval ("x", (n * (sqrt(3.0 / 5.0)) + m)) expr))
+                          where
+                              m = (a + b) / 2.0
+                              n = (b - a) / 2.0
 
 -- Recursively subdivides interval until tolerance or max depth is reached, effectively adding all leaves in the interval tree.
 -- Takes as input lower integration bound, upper bound, current recursion depth, max recursion depth, tolerance, and the function.
